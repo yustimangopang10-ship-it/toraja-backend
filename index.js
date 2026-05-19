@@ -52,7 +52,8 @@ app.use('/uploads', express.static('uploads'));
 // ================= KONFIGURASI EMAIL =================
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
+  port: 465,
+  secure: true, // Menggunakan SSL (lebih stabil di Vercel/Serverless)
   auth: {
     user: 'yustimangopang10@gmail.com',
     pass: 'fkfgqdubiwjfhyka'
@@ -132,7 +133,8 @@ app.post("/forgot-password", async (req, res) => {
       data: { email, token, expiresAt }
     });
     
-    const resetLink = `http://localhost:5173/reset-password?token=${token}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://toraja-frontend.vercel.app';
+    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
     
     await transporter.sendMail({
       from: 'yustimangopang10@gmail.com',
@@ -143,7 +145,7 @@ app.post("/forgot-password", async (req, res) => {
     
     res.json({ message: "Link reset password telah dikirim ke email Anda" });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error forgot-password:", error);
     res.status(500).json({ error: error.message });
   }
 });
