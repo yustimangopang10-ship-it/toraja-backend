@@ -11,9 +11,12 @@ const nodemailer = require("nodemailer");
 
 const app = express();
 
-// ================= KONFIGURASI CORS YANG LEBIH BAIK =================
+// ================= KONFIGURASI CORS YANG DINAMIS =================
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+  origin: (origin, callback) => {
+    // Mengizinkan semua origin secara dinamis (mendukung domain Vercel & localhost)
+    callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
