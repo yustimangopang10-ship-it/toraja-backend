@@ -35,36 +35,36 @@ async function main() {
   await prisma.term.createMany({
     data: [
       {
-        title: "Ketentuan Umum To Manglaa x TORAJA CLOTHING",
-        content: "Selamat datang di To Manglaa x TORAJA CLOTHING! Dengan menggunakan sistem pemesanan ini, Anda menyetujui seluruh syarat dan ketentuan yang berlaku.",
+        title: "Ketentuan Umum To Mangla x TORAJA CLOTHING",
+        content: "Selamat datang di To Mangla x TORAJA CLOTHING! Dengan menggunakan sistem pemesanan ini, Anda menyetujui seluruh syarat dan ketentuan yang berlaku.",
         category: "umum",
         version: 1,
         isActive: true
       },
       {
         title: "Prosedur Pemesanan",
-        content: "Pelanggan wajib login terlebih dahulu. Pilih produk favorit dari koleksi To Manglaa x TORAJA CLOTHING, pastikan memilih ukuran yang sesuai, lalu masukkan ke keranjang, dan lakukan checkout.",
+        content: "Pelanggan wajib login terlebih dahulu. Pilih produk favorit dari koleksi To Mangla x TORAJA CLOTHING, pastikan memilih ukuran yang sesuai, lalu masukkan ke keranjang, dan lakukan checkout.",
         category: "pemesanan",
         version: 1,
         isActive: true
       },
       {
         title: "Pengelolaan Order",
-        content: "Setelah checkout, order akan diproses oleh admin To Manglaa x TORAJA CLOTHING. Status pesanan dapat dipantau oleh pelanggan melalui halaman 'Pesananku'.",
+        content: "Setelah checkout, order akan diproses oleh admin To Mangla x TORAJA CLOTHING. Status pesanan dapat dipantau oleh pelanggan melalui halaman 'Pesananku'.",
         category: "order",
         version: 1,
         isActive: true
       },
       {
         title: "Pembayaran",
-        content: "Pembayaran dilakukan sesuai total harga pesanan. Konfirmasi pembayaran akan diverifikasi oleh admin To Manglaa x TORAJA CLOTHING.",
+        content: "Pembayaran dilakukan sesuai total harga pesanan. Konfirmasi pembayaran akan diverifikasi oleh admin To Mangla x TORAJA CLOTHING.",
         category: "pembayaran",
         version: 1,
         isActive: true
       },
       {
         title: "Privasi Data",
-        content: "Data pribadi pelanggan To Manglaa x TORAJA CLOTHING akan dijaga kerahasiaannya dan tidak akan disalahgunakan.",
+        content: "Data pribadi pelanggan To Mangla x TORAJA CLOTHING akan dijaga kerahasiaannya dan tidak akan disalahgunakan.",
         category: "privasi",
         version: 1,
         isActive: true
@@ -79,7 +79,7 @@ async function main() {
     ],
   });
 
-  console.log("✅ Data syarat & ketentuan To Manglaa x TORAJA CLOTHING berhasil ditambahkan");
+  console.log("✅ Data syarat & ketentuan To Mangla x TORAJA CLOTHING berhasil ditambahkan");
 }
 
 main()

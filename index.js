@@ -644,7 +644,7 @@ app.post("/api/admin/settings/init", verifyToken, verifyAdmin, async (req, res) 
       { key: "bank_bca_number", value: "1234567890" },
       { key: "bank_mandiri_number", value: "9876543210" },
       { key: "bank_bri_number", value: "5555555555" },
-      { key: "bank_account_name", value: "TO Manglaa x TORAJA CLOTHING" }
+      { key: "bank_account_name", value: "TO Mangla x TORAJA CLOTHING" }
     ];
     
     for (const setting of defaultSettings) {
