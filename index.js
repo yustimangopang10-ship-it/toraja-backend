@@ -23,22 +23,30 @@ app.use(express.json());
 
 const SECRET = "rahasia_jwt";
 
-// ================= KONFIGURASI UPLOAD GAMBAR =================
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
-}
+// ================= KONFIGURASI UPLOAD GAMBAR (CLOUDINARY) =================
+const cloudinary = require("cloudinary").v2;
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, unique + path.extname(file.originalname));
-  }
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
+const uploadToCloudinary = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: "toraja_clothing" },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
 app.use('/uploads', express.static('uploads'));
 
 // ================= KONFIGURASI EMAIL =================
@@ -397,7 +405,10 @@ app.get("/products/:id", async (req, res) => {
 app.post("/products", verifyToken, verifyAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, price, description } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : null;
+    let image = null;
+    if (req.file) {
+      image = await uploadToCloudinary(req.file.buffer);
+    }
     const product = await prisma.product.create({
       data: { name, price: Number(price), description, image }
     });
@@ -425,10 +436,13 @@ app.put("/products/:id", verifyToken, verifyAdmin, upload.single('image'), async
   try {
     const { id } = req.params;
     const { name, price, description } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    let image = undefined;
+    if (req.file) {
+      image = await uploadToCloudinary(req.file.buffer);
+    }
     const product = await prisma.product.update({
       where: { id: Number(id) },
-      data: { name, price: Number(price), description, ...(image && { image }) }
+      data: { name, price: Number(price), description, ...(image !== undefined && { image }) }
     });
     res.json({ message: "Produk berhasil diupdate", product });
   } catch (error) {
