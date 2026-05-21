@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
@@ -26,13 +28,13 @@ app.use(express.json());
 
 const SECRET = "rahasia_jwt";
 
-// ================= KONFIGURASI UPLOAD GAMBAR (CLOUDINARY) =================
+// ================= KONFIGURASI UPLOAD GAMBAR (CLOUDINARY & LOCAL FALLBACK) =================
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dkxsr061c",
+  api_key: process.env.CLOUDINARY_API_KEY || "231126478878993",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "X2SDyBKXsl78zIX0dlgKtiN20d0",
 });
 
 const storage = multer.memoryStorage();
@@ -50,7 +52,40 @@ const uploadToCloudinary = (fileBuffer) => {
     uploadStream.end(fileBuffer);
   });
 };
-app.use('/uploads', express.static('uploads'));
+
+const uploadImage = async (file) => {
+  const isCloudinaryConfigured = 
+    process.env.CLOUDINARY_CLOUD_NAME && 
+    process.env.CLOUDINARY_CLOUD_NAME !== "isi_cloud_name_kamu" &&
+    process.env.CLOUDINARY_API_KEY && 
+    process.env.CLOUDINARY_API_KEY !== "isi_api_key_kamu" &&
+    process.env.CLOUDINARY_API_SECRET && 
+    process.env.CLOUDINARY_API_SECRET !== "isi_api_secret_kamu";
+
+  if (isCloudinaryConfigured) {
+    try {
+      console.log("☁️ Attempting to upload to Cloudinary...");
+      return await uploadToCloudinary(file.buffer);
+    } catch (err) {
+      console.warn("⚠️ Cloudinary upload failed, falling back to local storage:", err.message);
+    }
+  }
+
+  console.log("📂 Using local storage fallback for upload...");
+  const uploadsDir = path.join(__dirname, "uploads");
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+  const filePath = path.join(uploadsDir, filename);
+  
+  fs.writeFileSync(filePath, file.buffer);
+  
+  return `/uploads/${filename}`;
+};
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ================= KONFIGURASI EMAIL =================
 const transporter = nodemailer.createTransport({
@@ -410,16 +445,21 @@ app.get("/products/:id", async (req, res) => {
 app.post("/products", verifyToken, verifyAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, price, description } = req.body;
+    console.log("📥 POST /products - Request body:", req.body);
+    console.log("📂 File received:", req.file ? req.file.originalname : "No file");
     let image = null;
     if (req.file) {
-      image = await uploadToCloudinary(req.file.buffer);
+      image = await uploadImage(req.file);
+      console.log("🖼️ Image uploaded successfully, path:", image);
     }
     const product = await prisma.product.create({
       data: { name, price: Number(price), description, image }
     });
+    console.log("✅ Product created in DB:", product);
     
     // Otomatis tambahkan semua ukuran untuk produk baru dengan stok 10
     const sizes = await prisma.size.findMany();
+    console.log(`📏 Found ${sizes.length} sizes to link`);
     for (const size of sizes) {
       await prisma.sizeOnProduct.create({
         data: {
@@ -429,9 +469,10 @@ app.post("/products", verifyToken, verifyAdmin, upload.single('image'), async (r
         }
       });
     }
-    
+    console.log("✅ Linked sizes to product");
     res.json({ message: "Produk berhasil ditambahkan", product });
   } catch (error) {
+    console.error("❌ Error adding product:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -443,7 +484,7 @@ app.put("/products/:id", verifyToken, verifyAdmin, upload.single('image'), async
     const { name, price, description } = req.body;
     let image = undefined;
     if (req.file) {
-      image = await uploadToCloudinary(req.file.buffer);
+      image = await uploadImage(req.file);
     }
     const product = await prisma.product.update({
       where: { id: Number(id) },
@@ -663,7 +704,8 @@ app.post("/api/admin/settings/init", verifyToken, verifyAdmin, async (req, res) 
 // ================= START SERVER =================
 const PORT = process.env.PORT || 5000;  // ← PERUBAHAN ADA DI SINI
 app.listen(PORT, () => {
-  console.log(`🚀 Server running di port ${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`📡 API tersedia di http://localhost:${PORT}/products`);
 });
 
 module.exports = app;
