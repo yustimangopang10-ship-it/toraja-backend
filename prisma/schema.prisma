@@ -98,7 +98,7 @@ model OrderItem {
 model Term {
   id        Int      @id @default(autoincrement())
   title     String
-  content   String
+  content   String   @db.Text
   category  String   @default("umum")
   version   Int      @default(1)
   isActive  Boolean  @default(true)
