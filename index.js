@@ -103,6 +103,44 @@ app.get("/", (req, res) => {
   res.send("Backend jalan 🚀");
 });
 
+// ================= DEMO ENDPOINTS (TANPA LOGIN - UNTUK PRESENTASI) =================
+app.get("/api/demo/users", async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: { id: true, name: true, email: true, role: true, createdAt: true }
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/demo/products", async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: { sizes: { include: { size: true } } }
+    });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/demo/orders", async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        user: { select: { name: true, email: true } },
+        items: { include: { product: true, size: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ================= REGISTER =================
 app.post("/auth/register", async (req, res) => {
   try {
