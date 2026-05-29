@@ -277,9 +277,27 @@ app.put("/api/admin/users/:id/role", verifyToken, verifyAdmin, async (req, res) 
 app.delete("/api/admin/users/:id", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.cart.deleteMany({ where: { userId: parseInt(id) } });
-    await prisma.order.deleteMany({ where: { userId: parseInt(id) } });
-    await prisma.user.delete({ where: { id: parseInt(id) } });
+    const userId = parseInt(id);
+
+    // 1. Hapus cart user
+    await prisma.cart.deleteMany({ where: { userId } });
+
+    // 2. Hapus OrderItem dulu (relasi dari Order)
+    const orders = await prisma.order.findMany({ where: { userId }, select: { id: true } });
+    const orderIds = orders.map(o => o.id);
+    if (orderIds.length > 0) {
+      await prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } });
+    }
+
+    // 3. Hapus Order
+    await prisma.order.deleteMany({ where: { userId } });
+
+    // 4. Hapus TermAgreement user
+    await prisma.termAgreement.deleteMany({ where: { userId } });
+
+    // 5. Hapus User
+    await prisma.user.delete({ where: { id: userId } });
+
     res.json({ message: "User berhasil dihapus" });
   } catch (error) {
     res.status(500).json({ error: error.message });
